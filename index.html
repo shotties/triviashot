@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title translate="no">TRIVIASHOT GAME</title>
+  <!-- html2canvas library to render HTML card into PNG image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0a192f;         
+      --card-bg: rgba(25, 45, 80, 0.65);         
+      --text-color: #f0f6fc;      
+      --accent-red: #ff3366;      
+      --accent-red-hover: #e6004c;
+      --cyan-bright: #38bdf8;     
+      --sky-cloud: #e0f2fe;
+      --blue-indigo: #1e3a8a;     
+      --blue-indigo-hover: #1d4ed8;
+      --success-green: #34d399;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at center, #1e40af 0%, #0c2340 50%, #071325 100%);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .quiz-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 25px;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      width: 90%;
+      max-width: 440px;
+      text-align: center;
+      position: relative;
+    }
+
+    .quiz-header-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #ffffff;
+      margin: 0 0 4px 0;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+    }
+
+    .quiz-header-subtitle {
+      font-size: 13px;
+      color: rgba(240, 246, 252, 0.7);
+      margin: 0 0 18px 0;
+      letter-spacing: 0.5px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: var(--text-color);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px 15px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 14px;
+    }
+
+    .badge-level {
+      color: var(--sky-cloud);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+
+    .timer-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--sky-cloud), var(--cyan-bright));
+      transition: width 0.1s linear;
+    }
+
+    .question-text {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #fff;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .question-pic {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 15px;
+      border: 1px solid var(--sky-cloud);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .choice-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button.btn-choice {
+      background-color: var(--blue-indigo);
+      color: white;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    button.btn-choice:hover:not(:disabled) {
+      background-color: var(--blue-indigo-hover);
+      border-color: var(--sky-cloud);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3);
+    }
+
+    button.btn-choice:disabled {
+      opacity: 0.8;
+      cursor: not-allowed;
+    }
+
+    .btn-action {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #38bdf8, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      transition: all 0.2s;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn-action:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.7);
+    }
+
+    .welcome-rules {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 14px;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .welcome-rules ul {
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+    }
+
+    .badge-card-container {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .badge-card {
+      width: 250px;
+      height: 480px;
+      background: radial-gradient(circle at top, #1e40af 0%, #071325 100%);
+      border: 2px solid var(--sky-cloud);
+      border-radius: 20px;
+      padding: 0;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .badge-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle at top right, rgba(224, 242, 254, 0.25), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .badge-card .card-header {
+      width: 100%;
+      text-align: center;
+      padding: 20px 0 10px 0;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+      z-index: 1;
+    }
+
+    .badge-card .card-header h3 {
+      margin: 0;
+      color: var(--sky-cloud);
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-card .card-header p {
+      font-size: 11px;
+      color: #94a3b8;
+      margin: 4px 0 0 0;
+    }
+
+    .badge-card .card-body {
+      flex: 1;
+      text-align: center;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 10px;
+    }
+
+    .badge-photo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .badge-straight-text {
+      color: var(--sky-cloud);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+      margin: 4px 0 6px 0;
+    }
+
+    .badge-card .badge-photo-wrapper {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      border: 2px solid var(--sky-cloud);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+      overflow: hidden;
+    }
+
+    .badge-card .badge-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .badge-score-block {
+      margin-top: 6px;
+    }
+
+    .badge-card .rank-icon {
+      font-size: 30px;
+      margin: 0;
+    }
+
+    .badge-card .rank-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin: 2px 0;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .badge-card .score-display {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--sky-cloud);
+      margin: 2px 0;
+      text-shadow: 0 0 15px rgba(224, 242, 254, 0.7);
+    }
+
+    .badge-card .card-footer {
+      width: 100%;
+      text-align: center;
+      border-top: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 12px 0;
+      background: rgba(7, 19, 37, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 1;
+    }
+
+    .badge-card .card-footer span {
+      font-size: 10px;
+      color: var(--sky-cloud);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .badge-card .spotify-code-image {
+      width: 130px;
+      height: auto;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.5));
+    }
+
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container" id="quizBox">
+    <h1 class="quiz-header-title" translate="no">TRIVIASHOT GAME</h1>
+    <p class="quiz-header-subtitle"></p>
+
+    <div class="status-bar" id="statusBar" style="display: none;">
+      <div>Rank: <span class="badge-level notranslate" translate="no" id="levelText">Casual Listener</span></div>
+      <div>Score: <span id="scoreText" style="color: var(--sky-cloud);">0</span></div>
+      <div>Lives: <span id="livesText">💙💙💙</span></div>
+    </div>
+
+    <div class="timer-container" id="timerContainer" style="display: none;">
+      <div class="timer-bar" id="timerBar"></div>
+    </div>
+
+    <div id="gameContent">
+      <!-- Welcome Screen rendered here by JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); 
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'start') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      }
+    }
+
+    const questionBank = {
+      casual: [
+        { 
+          question: "How many members are there in LNGSHOT?", 
+          pic: null,
+          choice: ["3", "4", "5", "6"], 
+          correctAnswer: 1 
+        },
+        { 
+          question: "What is the official fandom name for LNGSHOT fans?", 
+          pic: null, 
+          choice: ["LUXURY KITCHEN", "SHOTTIES", "SHOOTERS", "SHOOING"], 
+          correctAnswer: 1  
+        },
+        { 
+          question: "Which agency/label formed and manages the boy group LNGSHOT?", 
+          pic: null, 
+          choice: ["MORE VISION","VISION MORE", "H1GHR MUSIC", "JAY PARK ENT"], 
+          correctAnswer: 0 
+        },
+        { 
+          question: "Who is the youngest member (maknae)?", 
+          pic: null, 
+          choice: ["OHYUL", "JAY PARK", "LOUIS", "WOOJIN"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "What is the title track of LNGSHOT's debut EP, Shot Callers?", 
+          pic: null,
+          choice: ["Saucin'", "Moonwalkin'", "4sho 4sho", "Solo"], 
+          correctAnswer: 1 
+        }
+      ],
+      soft: [
+        { 
+          question: "What was the exact debut date of LNGSHOT's official EP Shot Callers?", 
+          pic: null, 
+          choice: ["December 22, 2025", "January 13, 2026", "February 14, 2026", "March 01, 2026"], 
+          correctAnswer: 1 
+        },
+        { 
+          question: "Before debuting in LNGSHOT, which member participated as a contestant on the hip-hop survival show RAP:PUBLIC?", 
+          pic: null, 
+          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "Woojin celebrates his birthday on which date?", 
+          pic: null, 
+          choice: ["January 15, 2005", "March 08, 2008", "July 12, 2005", "November 3, 2005"], 
+          correctAnswer: 1 
+        },
+        { 
+          question: "What is the date of birth of LNGSHOT's leader and eldest member Ohyul?", 
+          pic: null, 
+          choice: ["March 08, 2006", "September 03, 2004", "January 21, 2006", "January 22, 2006"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "What is Louis's date of birth?", 
+          pic: null, 
+          choice: ["May 01, 2010", "May 21, 2010", "September 01, 2010", "May 08, 2010"], 
+          correctAnswer: 0 
+        }
+      ],
+      hardcore: [
+        { 
+          question: "Whose shoes are these?", 
+          pic: "images/1.jpg", 
+          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
+          correctAnswer: 0 
+        },
+        { 
+          question: "Whose eye is this?", 
+          pic: "images/2.jpg", 
+          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
+          correctAnswer: 1 
+        },
+        { 
+          question: "Whose hand is this?", 
+          pic: "images/3.jpg",
+          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
+          correctAnswer: 3 
+        },
+        { 
+          question: "Whose eye is this?", 
+          pic: "images/4.jpg",  
+          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "What is the title of LNGSHOT's 2nd EP?", 
+          pic: null, 
+          choice: ["S.W.E.E.T.", "S.H.E.S.H.", "S.H.U.S.H.", "S.W.I.S.H."], 
+          correctAnswer: 3 
+        }
+      ],
+      ultimates: [
+        { 
+          question: "In 4SHOBOSHOW Episode 7, what fruit did Woojin buy at the supermarket?", 
+          pic: null, 
+          choice: ["🍎", "🍌", "🍈", "🍊"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "In 4SHOBOSHOW Episode 10, what was determined to be Louis's personal color season/tone?", 
+          pic: null, 
+          choice: ["Spring Warm Light", "Summer Cool Light", "Autumn Warm Deep", "Winter Cool Dark"], 
+          correctAnswer: 1 
+        },
+        { 
+          question: "In 4SHOBOSHOW Episode 4, Ohyul won the MVP title during the 40,000 Calorie Challenge by eating how many calories?", 
+          pic: null, 
+          choice: ["7,430 kcal", "7,785 kcal", "7,740 kcal", "7,780 kcal"], 
+          correctAnswer: 3 
+        },
+        { 
+          question: "How many potatoes did Ryul harvest in 4SHOBOSHOW Episode 14 (Potato Field)?", 
+          pic: null, 
+          choice: ["234", "203", "188", "176"], 
+          correctAnswer: 2 
+        },
+        { 
+          question: "How many times does the phrase 'Where You At' appear in the song 'Boo Thang'?", 
+          pic: null, 
+          choice: ["25", "26", "27", "23"], 
+          correctAnswer: 2 
+        }
+      ]
+    };
+
+    const levelOrder = ["casual", "soft", "hardcore", "ultimates"];			
+    
+    const levelLabel = {
+      casual: "Rookie",
+      soft: "Expert",
+      hardcore: "Master",
+      ultimates: "Legend"
+    };
+
+    const levelEmoji = {
+      casual: "☁️",      
+      soft: "🌟",        
+      hardcore: "🌕",     
+      ultimates: "🛬"     
+    };
+
+    let currentLevelIndex = 0;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let lives = 3;
+    let correctInCurrentLevel = 0;
+    let levelStartScore = 0;
+    let timerInterval;
+    const QUESTION_TIME = 12;
+
+    const levelText = document.getElementById("levelText");
+    const scoreText = document.getElementById("scoreText");
+    const livesText = document.getElementById("livesText");
+    const gameContent = document.getElementById("gameContent");
+    const timerBar = document.getElementById("timerBar");
+    const quizBox = document.getElementById("quizBox");
+    const statusBar = document.getElementById("statusBar");
+    const timerContainer = document.getElementById("timerContainer");
+
+    function renderWelcomeScreen() {
+      statusBar.style.display = "none";
+      timerContainer.style.display = "none";
+
+      gameContent.innerHTML = `
+        <div style="font-size: 50px; margin: 10px 0;">☁️🎧🤞☁️</div>
+        <p style="font-size: 15px; color: var(--sky-cloud); font-weight: 600; margin-bottom: 5px;">
+          <strong>Welcome to 4SHO AIR</strong> 
+        </p>
+
+        <div class="welcome-rules">
+          <strong>📜 Game Rules:</strong>
+          <ul>
+            <li>⏱️ You have <strong>12 seconds</strong> per question.</li>
+            <li>💙 You start with <strong>3 Lives</strong>.</li>
+            <li>🎯 Get at least <strong>4/5 correct</strong> to Rank Up!</li>
+            <li>🏆 Collect points and download your IG/TikTok Badge.</li>
+          </ul>
+        </div>
+
+        <button class="btn-action" onclick="startGame()">
+          READY FOR TAKEOFF? <span translate="no">✈️</span>
+        </button>
+      `;
+    }
+
+    function startGame() {
+      playSound('start');
+      currentLevelIndex = 0;
+      currentQuestionIndex = 0;
+      correctInCurrentLevel = 0;
+      score = 0;
+      levelStartScore = 0;
+      lives = 3;
+      scoreText.innerText = score;
+      updateLivesDisplay();
+
+      setTimeout(() => {
+        renderQuestion();
+      }, 250);
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      let timeRemaining = QUESTION_TIME;
+      timerBar.style.width = "100%";
+
+      timerInterval = setInterval(() => {
+        timeRemaining -= 0.1;
+        let percentage = (timeRemaining / QUESTION_TIME) * 100;
+        timerBar.style.width = `${Math.max(0, percentage)}%`;
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          handleTimeOut();
+        }
+      }, 100);
+    }
+
+    function handleTimeOut() {
+      playSound('wrong');
+      quizBox.classList.add("shake");
+      setTimeout(() => quizBox.classList.remove("shake"), 400);
+
+      const allButtons = document.querySelectorAll(".btn-choice");
+      allButtons.forEach(btn => btn.disabled = true);
+
+      lives--;
+      updateLivesDisplay();
+
+      if (lives <= 0) {
+        setTimeout(handleGameOver, 1000);
+      } else {
+        setTimeout(nextQuestion, 1000);
+      }
+    }
+
+    function renderQuestion() {
+      statusBar.style.display = "flex";
+      timerContainer.style.display = "block";
+
+      const currentLevelKey = levelOrder[currentLevelIndex];
+      const questionsList = questionBank[currentLevelKey];
+      const currentQuestion = questionsList[currentQuestionIndex];
+
+      levelText.innerHTML = `<span class="notranslate" translate="no">${levelLabel[currentLevelKey]}</span> ${levelEmoji[currentLevelKey]}`;
+
+      let picHtml = "";
+      if (currentQuestion.pic) {
+        picHtml = `<img src="${currentQuestion.pic}" alt="Question Image" class="question-pic">`;
+      }
+
+      gameContent.innerHTML = `
+        <div class="question-text">${currentQuestionIndex + 1}. ${currentQuestion.question}</div>
+        ${picHtml}
+        <div class="choice-container" id="choiceBox"></div>
+      `;
+
+      const choiceBox = document.getElementById("choiceBox");
+
+      currentQuestion.choice.forEach((choiceText, index) => {
+        const button = document.createElement("button");
+        button.classList.add("btn-choice", "notranslate");
+        
+        button.setAttribute("translate", "no");
+        
+        button.innerText = `${String.fromCharCode(65 + index)}. ${choiceText}`;
+        button.onclick = () => checkAnswer(index);
+        choiceBox.appendChild(button);
+      });
+
+      startTimer();
+    }
+
+    function checkAnswer(selectedIndex) {
+      clearInterval(timerInterval);
+      const allButtons = document.querySelectorAll(".btn-choice");
+      allButtons.forEach(btn => btn.disabled = true);
+
+      const currentLevelKey = levelOrder[currentLevelIndex];
+      const correctAnswer = questionBank[currentLevelKey][currentQuestionIndex].correctAnswer;
+
+      if (selectedIndex === correctAnswer) {
+        playSound('correct');
+        score += 10;
+        correctInCurrentLevel++;
+        scoreText.innerText = score;
+        allButtons[selectedIndex].style.backgroundColor = "rgba(56, 189, 248, 0.4)";
+        allButtons[selectedIndex].style.borderColor = "var(--sky-cloud)";
+      } else {
+        playSound('wrong');
+        quizBox.classList.add("shake");
+        setTimeout(() => quizBox.classList.remove("shake"), 400);
+
+        allButtons[selectedIndex].style.backgroundColor = "rgba(255, 51, 102, 0.4)";
+        allButtons[selectedIndex].style.borderColor = "var(--accent-red)";
+
+        lives--;
+        updateLivesDisplay();
+      }
+
+      if (lives <= 0) {
+        setTimeout(handleGameOver, 1000);
+      } else {
+        setTimeout(nextQuestion, 1000);
+      }
+    }
+
+    function nextQuestion() {
+      const currentLevelKey = levelOrder[currentLevelIndex];
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex >= questionBank[currentLevelKey].length) {
+        if (correctInCurrentLevel >= 4) {
+          const savedCorrectCount = correctInCurrentLevel;
+          currentLevelIndex++;
+          currentQuestionIndex = 0;
+          correctInCurrentLevel = 0;
+          levelStartScore = score;
+
+          if (currentLevelIndex < levelOrder.length) {
+            renderLevelUpScreen(savedCorrectCount);
+          } else {
+            handleGameCompletion();
+          }
+        } else {
+          renderLevelFailedScreen();
+        }
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function updateLivesDisplay() {
+      let livesIcons = "";
+      for (let i = 0; i < lives; i++) {
+        livesIcons += "💙";
+      }
+      livesText.innerText = livesIcons || "💀";
+    }
+
+    function renderLevelUpScreen(correctScore) {
+      clearInterval(timerInterval);
+      const nextLevelKey = levelOrder[currentLevelIndex];
+      gameContent.innerHTML = `
+        <h2>RANK UP!</h2>
+        <p>You answered <strong>${correctScore}/5 questions</strong> correctly!</p>
+        <p>Your Next Rank: <br><strong class="notranslate" translate="no" style="color:var(--sky-cloud); font-size: 18px;">${levelLabel[nextLevelKey]} ${levelEmoji[nextLevelKey]}</strong></p>
+        <button class="btn-action" onclick="renderQuestion()">Fly Again <span translate="no">✈️</span></button> 
+      `;
+    }
+
+    function renderLevelFailedScreen() {
+      clearInterval(timerInterval);
+      gameContent.innerHTML = `
+        <h2>TURBULENCE! 😅</h2>
+        <p>You need at least <strong>4/5 correct answers</strong> to level up.</p>
+        <p>Your result: <strong>${correctInCurrentLevel}/5 correct</strong></p>
+        <button class="btn-action" onclick="retryCurrentLevel()">Fly Again <span translate="no">🔄</span> </button>
+      `;
+    }
+
+    function retryCurrentLevel() {
+      currentQuestionIndex = 0;
+      correctInCurrentLevel = 0;
+      lives = 3;
+      score = levelStartScore;
+      scoreText.innerText = score;
+      updateLivesDisplay();
+      renderQuestion();
+    }
+
+    function handleGameOver() {
+      clearInterval(timerInterval);
+      const currentLevelKey = levelOrder[currentLevelIndex];
+      renderVictoryScreen("MISSION FAILED 💀", levelLabel[currentLevelKey], levelEmoji[currentLevelKey]);
+    }
+
+    function handleGameCompletion() {
+      clearInterval(timerInterval);
+      renderVictoryScreen("Congratulationsss 🏆", "VIP Touchdown", "🛬");
+    }
+
+    function renderVictoryScreen(title, rankTitle, rankEmoji) {
+      statusBar.style.display = "none";
+      timerContainer.style.display = "none";
+
+      const badgePhotoUrl = "images/pic.jpg";                                   /*Badge pic n spotify barcode  */
+      const spotifyBarcodeUrl = "images/barcodeee.png";
+
+      gameContent.innerHTML = `
+        <h2 style="margin-bottom: 5px;">${title}</h2>
+        
+        <div class="badge-card-container">
+          <div class="badge-card" id="badgeCard">
+            <!-- Header Section -->
+            <div class="card-header">
+              <h3 translate="no">SHOTTIES 4SHO</h3>
+              <p>BOARDING PASS • S.W.I.S.H. ERA</p>
+            </div>
+
+            <!-- Body Section: Photo + Score Stack -->
+            <div class="card-body">
+              <div class="badge-photo-container">
+                <div class="badge-straight-text">2ND EP OUT NOW!</div>
+                <div class="badge-photo-wrapper">
+                  <img src="${badgePhotoUrl}" alt="Badge Photo" class="badge-photo" onerror="this.style.display='none'">
+                </div>
+              </div>
+
+              <!-- Compacted Rank and Score Block -->
+              <div class="badge-score-block">
+                <div class="rank-icon">${rankEmoji}</div>
+                <div class="rank-title notranslate" translate="no">${rankTitle}</div>
+                <div class="score-display">${score} PTS</div>
+              </div>
+            </div>
+
+            <!-- Footer Section: Houses Spotify Barcode -->
+            <div class="card-footer">
+              <img src="${spotifyBarcodeUrl}" alt="Spotify Code" class="spotify-code-image" onerror="this.style.display='none'">
+              <span>SCAN ME</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-action" onclick="downloadBadge()">
+          📸 Download Badge for IG/TikTok Story
+        </button>
+
+        <button class="btn-action" style="background: rgba(255,255,255,0.1); box-shadow: none;" onclick="renderWelcomeScreen()">
+          🔄 Play Again
+        </button>
+      `;
+    }
+
+    function downloadBadge() {
+      const badgeElement = document.getElementById("badgeCard");
+
+      const options = {
+        backgroundColor: "#071325",
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      };
+
+      html2canvas(badgeElement, options).then(canvas => {
+        try {
+          const link = document.createElement("a");
+          link.download = "TRIVIASHOT_BADGE.png";
+          link.href = canvas.toDataURL("image/png");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (err) {
+          console.error("Failed to download image:", err);
+          alert("Failed to download image.");
+        }
+      }).catch(err => {
+        console.error("html2canvas error:", err);
+        alert("An error occurred while processing the badge card.");
+      });
+    }
+
+    renderWelcomeScreen();
+	
+	  /*GOT CHUUU, what u lookin for? ;);) */
+	  
+  </script>
+</body>
+</html>
