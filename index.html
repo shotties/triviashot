@@ -63,6 +63,7 @@
       letter-spacing: 0.5px;
     }
 
+    /* DIPERBAIKI: Mencegah teks turun baris saat 3 digit */
     .status-bar {
       display: flex;
       justify-content: space-between;
@@ -71,17 +72,23 @@
       font-weight: bold;
       color: var(--text-color);
       background: rgba(255, 255, 255, 0.08);
-      padding: 10px 15px;
+      padding: 10px 12px;
       border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      font-size: 14px;
+      font-size: 13px;
+      white-space: nowrap;
+      gap: 4px;
+    }
+
+    .status-bar > div {
+      white-space: nowrap;
     }
 
     .badge-level {
       color: var(--sky-cloud);
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
       text-transform: uppercase;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .timer-container {
@@ -464,7 +471,7 @@
         { 
           question: "Woojin celebrates his birthday on which date?", 
           pic: null, 
-          choice: ["January 15, 2005", "March 08, 2008", "July 12, 2005", "November 03, 2005"], 
+          choice: ["January 15, 2005", "March 08, 2008", "July 12, 2005", "November 3, 2005"], 
           correctAnswer: 1 
         },
         { 
@@ -807,7 +814,7 @@
       statusBar.style.display = "none";
       timerContainer.style.display = "none";
 
-      const badgePhotoUrl = "images/pic.jpg";                                   /*Badge pic n spotify barcode  */
+      const badgePhotoUrl = "images/pic.jpg";                                     /*Badge pic n spotify barcode  */
       const spotifyBarcodeUrl = "images/barcodeee.png";
 
       gameContent.innerHTML = `
@@ -886,9 +893,6 @@
     }
 
     renderWelcomeScreen();
-	
-	  /*GOT CHUUU, what u lookin for? ;);) */
-	  
   </script>
 </body>
 </html>
