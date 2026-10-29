@@ -9,8 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-      --bg-dark: #0a192f;         
-      --card-bg: rgba(25, 45, 80, 0.65);         
+      --bg-dark: #0a192f;          
+      --card-bg: rgba(25, 45, 80, 0.65);          
       --text-color: #f0f6fc;      
       --accent-red: #ff3366;      
       --accent-red-hover: #e6004c;
@@ -33,7 +33,20 @@
       overflow-x: hidden;
     }
 
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      display: block;
+    }
+
     .quiz-container {
+      position: relative;
+      z-index: 1;
       background: var(--card-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -44,7 +57,6 @@
       width: 90%;
       max-width: 440px;
       text-align: center;
-      position: relative;
     }
 
     .quiz-header-title {
@@ -64,7 +76,6 @@
       letter-spacing: 0.5px;
     }
 
-  
     .status-bar {
       display: flex;
       justify-content: space-between;
@@ -368,6 +379,9 @@
 </head>
 <body>
 
+  <!-- Full-screen Canvas-->
+  <canvas id="starfield"></canvas>
+
   <div class="quiz-container" id="quizBox">
     <h1 class="quiz-header-title" translate="no">TRIVIASHOT GAME</h1>
     <p class="quiz-header-subtitle"></p>
@@ -388,6 +402,86 @@
   </div>
 
   <script>
+    // Minimalist stars
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const numStars = 100;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 1.0 + 0.3, // Small dot size
+        alpha: Math.random(),
+        speed: Math.random() * 0.012 + 0.003,
+        maxAlpha: Math.random() * 0.7 + 0.3
+      });
+    }
+
+    function animateStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      stars.forEach(star => {
+        star.alpha += star.speed;
+        if (star.alpha > star.maxAlpha || star.alpha < 0.1) {
+          star.speed = -star.speed;
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(224, 242, 254, ${Math.abs(star.alpha)})`;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = `rgba(56, 189, 248, ${Math.abs(star.alpha)})`;
+        ctx.fill();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    // Embedded Question Bank to prevent loading issues
+    const questionBank = {
+      casual: [
+        { question: "How many members are there in LNGSHOT?", pic: null, choice: ["3", "4", "5", "6"], correctAnswer: 1 },
+        { question: "What is the official fandom name for LNGSHOT fans?", pic: null, choice: ["LUXURY KITCHEN", "SHOTTIES", "SHOOTERS", "SHOOING"], correctAnswer: 1 },
+        { question: "Which agency/label formed and manages the boy group LNGSHOT?", pic: null, choice: ["MORE VISION","VISION MORE", "H1GHR MUSIC", "JAY PARK ENT"], correctAnswer: 0 },
+        { question: "Who is the youngest member (maknae)?", pic: null, choice: ["OHYUL", "JAY PARK", "LOUIS", "WOOJIN"], correctAnswer: 2 },
+        { question: "What is the title track of LNGSHOT's debut EP, Shot Callers?", pic: null, choice: ["Saucin'", "Moonwalkin'", "4sho 4sho", "Solo"], correctAnswer: 1 }
+      ],
+      soft: [
+        { question: "What was the exact debut date of LNGSHOT's official EP Shot Callers?", pic: null, choice: ["December 22, 2025", "January 13, 2026", "February 14, 2026", "March 01, 2026"], correctAnswer: 1 },
+        { question: "Before debuting in LNGSHOT, which member participated as a contestant on the hip-hop survival show RAP:PUBLIC?", pic: null, choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], correctAnswer: 2 },
+        { question: "Woojin celebrates his birthday on which date?", pic: null, choice: ["January 15, 2005", "March 08, 2008", "July 12, 2005", "November 03, 2005"], correctAnswer: 1 },
+        { question: "What is the date of birth of LNGSHOT's leader and eldest member Ohyul?", pic: null, choice: ["March 08, 2006", "September 03, 2004", "January 21, 2006", "January 22, 2006"], correctAnswer: 2 },
+        { question: "What is Louis's date of birth?", pic: null, choice: ["May 01, 2010", "May 21, 2010", "September 01, 2010", "May 08, 2010"], correctAnswer: 0 }
+      ],
+      hardcore: [
+        { question: "Whose shoes are these?", pic: "images/1.jpg", choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], correctAnswer: 0 },
+        { question: "Whose eye is this?", pic: "images/2.jpg", choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], correctAnswer: 1 },
+        { question: "Whose hand is this?", pic: "images/3.jpg", choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], correctAnswer: 3 },
+        { question: "Whose eye is this?", pic: "images/4.jpg", choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], correctAnswer: 2 },
+        { question: "What is the title of LNGSHOT's 2nd EP?", pic: null, choice: ["S.W.E.E.T.", "S.H.E.S.H.", "S.H.U.S.H.", "S.W.I.S.H."], correctAnswer: 3 }
+      ],
+      ultimates: [
+        { question: "What is the title track of LNGSHOT's 2nd EP?", pic: null, choice: ["🍎🍎🍎🍎", "🍌🍌🍌🍌", "🍈🍈🍈🍈", "🍊🍊🍊🍊"], correctAnswer: 1 },
+        { question: "In 4SHOBOSHOW Episode 10, what was determined to be Louis's personal color season/tone?", pic: null, choice: ["Spring Warm Light", "Summer Cool Light", "Autumn Warm Deep", "Winter Cool Dark"], correctAnswer: 1 },
+        { question: "In 4SHOBOSHOW Episode 4, Ohyul won the MVP title during the 40,000 Calorie Challenge by eating how many calories?", pic: null, choice: ["7,430 kcal", "7,785 kcal", "7,740 kcal", "7,780 kcal"], correctAnswer: 3 },
+        { question: "How many potatoes did Ryul harvest in 4SHOBOSHOW Episode 14 (Potato Field)?", pic: null, choice: ["234", "203", "188", "176"], correctAnswer: 2 },
+        { question: "How many times does the phrase 'Where You At' appear in the song 'Boo Thang'?", pic: null, choice: ["25", "26", "27", "23"], correctAnswer: 2 }
+      ]
+    };
+
+    // Game Logiccc
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -423,138 +517,7 @@
       }
     }
 
-    const questionBank = {
-      casual: [
-        { 
-          question: "How many members are there in LNGSHOT?", 
-          pic: null,
-          choice: ["3", "4", "5", "6"], 
-          correctAnswer: 1 
-        },
-        { 
-          question: "What is the official fandom name for LNGSHOT fans?", 
-          pic: null, 
-          choice: ["LUXURY KITCHEN", "SHOTTIES", "SHOOTERS", "SHOOING"], 
-          correctAnswer: 1  
-        },
-        { 
-          question: "Which agency/label formed and manages the boy group LNGSHOT?", 
-          pic: null, 
-          choice: ["MORE VISION","VISION MORE", "H1GHR MUSIC", "JAY PARK ENT"], 
-          correctAnswer: 0 
-        },
-        { 
-          question: "Who is the youngest member (maknae)?", 
-          pic: null, 
-          choice: ["OHYUL", "JAY PARK", "LOUIS", "WOOJIN"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "What is the title track of LNGSHOT's debut EP, Shot Callers?", 
-          pic: null,
-          choice: ["Saucin'", "Moonwalkin'", "4sho 4sho", "Solo"], 
-          correctAnswer: 1 
-        }
-      ],
-      soft: [
-        { 
-          question: "What was the exact debut date of LNGSHOT's official EP Shot Callers?", 
-          pic: null, 
-          choice: ["December 22, 2025", "January 13, 2026", "February 14, 2026", "March 01, 2026"], 
-          correctAnswer: 1 
-        },
-        { 
-          question: "Before debuting in LNGSHOT, which member participated as a contestant on the hip-hop survival show RAP:PUBLIC?", 
-          pic: null, 
-          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "Woojin celebrates his birthday on which date?", 
-          pic: null, 
-          choice: ["January 15, 2005", "March 08, 2008", "July 12, 2005", "November 03, 2005"], 
-          correctAnswer: 1 
-        },
-        { 
-          question: "What is the date of birth of LNGSHOT's leader and eldest member Ohyul?", 
-          pic: null, 
-          choice: ["March 08, 2006", "September 03, 2004", "January 21, 2006", "January 22, 2006"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "What is Louis's date of birth?", 
-          pic: null, 
-          choice: ["May 01, 2010", "May 21, 2010", "September 01, 2010", "May 08, 2010"], 
-          correctAnswer: 0 
-        }
-      ],
-      hardcore: [
-        { 
-          question: "Whose shoes are these?", 
-          pic: "images/1.jpg", 
-          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
-          correctAnswer: 0 
-        },
-        { 
-          question: "Whose eye is this?", 
-          pic: "images/2.jpg", 
-          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
-          correctAnswer: 1 
-        },
-        { 
-          question: "Whose hand is this?", 
-          pic: "images/3.jpg",
-          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
-          correctAnswer: 3 
-        },
-        { 
-          question: "Whose eye is this?", 
-          pic: "images/4.jpg",  
-          choice: ["WOOJIN", "LOUIS", "RYUL", "OHYUL"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "What is the title of LNGSHOT's 2nd EP?", 
-          pic: null, 
-          choice: ["S.W.E.E.T.", "S.H.E.S.H.", "S.H.U.S.H.", "S.W.I.S.H."], 
-          correctAnswer: 3 
-        }
-      ],
-      ultimates: [
-        { 
-          question: "In 4SHOBOSHOW Episode 7, what fruit did Woojin buy at the supermarket?", 
-          pic: null, 
-          choice: ["🍎", "🍌", "🍈", "🍊"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "In 4SHOBOSHOW Episode 10, what was determined to be Louis's personal color season/tone?", 
-          pic: null, 
-          choice: ["Spring Warm Light", "Summer Cool Light", "Autumn Warm Deep", "Winter Cool Dark"], 
-          correctAnswer: 1 
-        },
-        { 
-          question: "In 4SHOBOSHOW Episode 4, Ohyul won the MVP title during the 40,000 Calorie Challenge by eating how many calories?", 
-          pic: null, 
-          choice: ["7,430 kcal", "7,785 kcal", "7,740 kcal", "7,780 kcal"], 
-          correctAnswer: 3 
-        },
-        { 
-          question: "How many potatoes did Ryul harvest in 4SHOBOSHOW Episode 14 (Potato Field)?", 
-          pic: null, 
-          choice: ["234", "203", "188", "176"], 
-          correctAnswer: 2 
-        },
-        { 
-          question: "How many times does the phrase 'Where You At' appear in the song 'Boo Thang'?", 
-          pic: null, 
-          choice: ["25", "26", "27", "23"], 
-          correctAnswer: 2 
-        }
-      ]
-    };
-
-    const levelOrder = ["casual", "soft", "hardcore", "ultimates"];			
+    const levelOrder = ["casual", "soft", "hardcore", "ultimates"];      
     
     const levelLabel = {
       casual: "Rookie",
@@ -564,9 +527,9 @@
     };
 
     const levelEmoji = {
-      casual: "☁️",      
+      casual: "🌕",      
       soft: "🌟",        
-      hardcore: "🌕",     
+      hardcore: "🕊️",     
       ultimates: "🛬"     
     };
 
@@ -591,6 +554,7 @@
     function renderWelcomeScreen() {
       statusBar.style.display = "none";
       timerContainer.style.display = "none";
+      document.getElementById("starfield").style.display = "block";
 
       gameContent.innerHTML = `
         <div style="font-size: 50px; margin: 10px 0;">☁️🎧🤞☁️</div>
@@ -616,6 +580,8 @@
 
     function startGame() {
       playSound('start');
+      document.getElementById("starfield").style.display = "none";
+
       currentLevelIndex = 0;
       currentQuestionIndex = 0;
       correctInCurrentLevel = 0;
@@ -691,9 +657,7 @@
       currentQuestion.choice.forEach((choiceText, index) => {
         const button = document.createElement("button");
         button.classList.add("btn-choice", "notranslate");
-        
         button.setAttribute("translate", "no");
-        
         button.innerText = `${String.fromCharCode(65 + index)}. ${choiceText}`;
         button.onclick = () => checkAnswer(index);
         choiceBox.appendChild(button);
@@ -815,7 +779,7 @@
       statusBar.style.display = "none";
       timerContainer.style.display = "none";
 
-      const badgePhotoUrl = "images/pic.jpg";                                     /*Badge pic n spotify barcode  */
+      const badgePhotoUrl = "images/pic.jpg";
       const spotifyBarcodeUrl = "images/barcodeee.png";
 
       gameContent.innerHTML = `
@@ -823,13 +787,11 @@
         
         <div class="badge-card-container">
           <div class="badge-card" id="badgeCard">
-            <!-- Header Section -->
             <div class="card-header">
               <h3 translate="no">SHOTTIES 4SHO</h3>
               <p>BOARDING PASS • S.W.I.S.H. ERA</p>
             </div>
 
-            <!-- Body Section: Photo + Score Stack -->
             <div class="card-body">
               <div class="badge-photo-container">
                 <div class="badge-straight-text">2ND EP OUT NOW!</div>
@@ -838,7 +800,6 @@
                 </div>
               </div>
 
-              <!-- Compacted Rank and Score Block -->
               <div class="badge-score-block">
                 <div class="rank-icon">${rankEmoji}</div>
                 <div class="rank-title notranslate" translate="no">${rankTitle}</div>
@@ -846,7 +807,6 @@
               </div>
             </div>
 
-            <!-- Footer Section: Houses Spotify Barcode -->
             <div class="card-footer">
               <img src="${spotifyBarcodeUrl}" alt="Spotify Code" class="spotify-code-image" onerror="this.style.display='none'">
               <span>SCAN ME</span>
@@ -894,9 +854,9 @@
     }
 
     renderWelcomeScreen();
-    
-     /*GOT CHUUU, what u lookin for? ;);) */
-    
+	
+	 /*GOT CHUUU, what u lookin for? ;);) */
+	 
   </script>
 </body>
 </html>
